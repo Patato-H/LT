@@ -1,8 +1,3 @@
-#!name=蓝通云
-#!desc=指定 hk6.org 域名使用阿里 DNS（223.5.5.5）解析。
-#!openUrl=https://ltyun001.com
-#!author=Patatooo
-#!icon=https://favicon.im/www.ltyun.xyz?larger=true&t=1782337722290
 name: 蓝通云
 description: 优化蓝通云入口访问策略，自动分流并提升连接稳定性。
 author: Patatooo
