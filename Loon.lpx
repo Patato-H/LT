@@ -7,5 +7,3 @@
 *.hk6.org = server:223.5.5.5
 [Rule]
 DOMAIN-KEYWORD,ltyun001,DIRECT
-DOMAIN,LTyun.org,PROXY
-DOMAIN-SUFFIX,LTyun.org,PROXY
