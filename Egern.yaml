@@ -16,8 +16,7 @@ rules:
     policy: PROXY
 
 dns:
-  upstreams:
-    蓝通:
+  bootstrap:
       - 223.5.5.5
   forward:
     - domain:
