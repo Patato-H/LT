@@ -21,10 +21,10 @@ dns:
   forward:
     - domain:
         match: hk6.org
-        value: 蓝通
+        value: bootstrap
         disabled: false
 
     - domain_wildcard:
         match: "*.hk6.org"
-        value: 蓝通
+        value: bootstrap
         disabled: false
