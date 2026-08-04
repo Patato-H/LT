@@ -1,9 +1,9 @@
-#!name=蓝通云
-#!desc=优化蓝通云入口访问策略，自动分流并提升连接稳定性。
+#!name=快冲云
+#!desc=优化蓝快冲入口访问策略，自动分流并提升连接稳定性。
 #!openUrl=https://ltyun001.com
 #!author=Patatooo
-#!icon=https://favicon.im/www.ltyun.xyz?larger=true&t=1782337722290
+#!icon=https://dimg04.tripcdn.com/images/0Z05f224x9a88doao7C16.jpg
 [Host]
 *.hk6.org = server:223.5.5.5
 [Rule]
-DOMAIN-KEYWORD,ltyun001,DIRECT
+#DOMAIN-KEYWORD,,DIRECT
