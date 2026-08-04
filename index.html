@@ -372,7 +372,8 @@
           appStoreUrl: "https://apps.apple.com/hk/app/shadowrocket/id932747118?uo=4",
           primaryLabel: "导入",
           copyLabel: "复制链接",
-          url: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Shadowrocket.module"
+          importUrl: "shadowrocket://install?module=https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Shadowrocket.module", 
+          copyUrl: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Shadowrocket.module"
         },
         {
           name: "Loon",
@@ -380,7 +381,8 @@
           appStoreUrl: "https://apps.apple.com/hk/app/loon/id1373567447?uo=4",
           primaryLabel: "导入",
           copyLabel: "复制链接",
-          url: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Loon.lpx"
+          importUrl: "https://www.nsloon.com/openloon/import?plugin=https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Loon.lpx",
+          copyUrl: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Loon.lpx"
         },
         {
           name: "Egern",
@@ -388,7 +390,8 @@
           appStoreUrl: "https://apps.apple.com/hk/app/egern/id1616105820?uo=4",
           primaryLabel: "导入",
           copyLabel: "复制链接",
-          url: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Egern.yaml"
+          importUrl: "egern:/modules/new?url=https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Egern.yaml",
+           copyUrl: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Egern.yaml"
         }
       ],
       // 当浏览器无法直接读取 Bing API 时，使用官方图片地址作为静态回退。
@@ -439,8 +442,18 @@
             </a>
           </div>
           <div class="actions">
-            <a class="action-btn primary" href="${item.url}" target="_blank" rel="noopener noreferrer">${item.primaryLabel}</a>
-            <button class="action-btn secondary" type="button" data-copy="${item.url}">${item.copyLabel}</button>
+            <a
+  class="action-btn primary"
+  href="${item.importUrl}">
+  ${item.primaryLabel}
+</a>
+
+<button
+  class="action-btn secondary"
+  type="button"
+  data-copy="${item.copyUrl}">
+  ${item.copyLabel}
+</button>
           </div>
         `;
         fragment.appendChild(article);
