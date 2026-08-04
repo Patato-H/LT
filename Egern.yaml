@@ -1,19 +1,14 @@
-name: 蓝通云
-description: 优化蓝通云入口访问策略，自动分流并提升连接稳定性。
+name: 快冲云
+description: 优化快冲云入口访问策略，自动分流并提升连接稳定性。
 author: Patatooo
-homepage: https://ltyun001.com
+homepage: https://kcyun.org.com
 icon: https://favicon.im/www.ltyun.xyz?larger=true&t=1782337722290
 
 rules:
 - domain_keyword:
-    match: ltyun001
+    match: kcyun
     policy: DIRECT
-- domain:
-    match: ltyun.org
-    policy: PROXY
-- domain_suffix:
-    match: ltyun.org
-    policy: PROXY
+
 
 dns:
   bootstrap:
