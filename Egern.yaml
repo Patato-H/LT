@@ -1,13 +1,10 @@
 name: 快冲云
 description: 优化快冲云入口访问策略，自动分流并提升连接稳定性。
 author: Patatooo
-homepage: https://kcyun.org.com
-icon: https://favicon.im/www.ltyun.xyz?larger=true&t=1782337722290
+homepage: https://kcyun.org
+icon: https://dimg04.tripcdn.com/images/0Z05f224x9a88doao7C16.jpg
 
 rules:
-- domain_keyword:
-    match: kcyun
-    policy: DIRECT
 
 
 dns:
