@@ -1,0 +1,29 @@
+mixed-port: 7890
+mode: rule
+log-level: info
+
+proxies:
+  - name: "🇭🇰 香港 A5(x1) | [ISP] [原生] [优]"
+    type: vless
+    server: 98bfdf3b-2e1a-4876-a7a3-66d381777c62.hk6.org
+    port: 46761
+    uuid: fa533d9c-af2d-4ef5-abfc-4d91742bdc77
+    network: tcp
+    flow: xtls-rprx-vision
+    tls: true
+    servername: data.amazon.com
+    client-fingerprint: chrome
+    reality-opts:
+      public-key: ylaaqvlEcIkSOTItiBwJH0DVFyrvtBNLttkaIVZlZx0
+      short-id: 74d688c742a80c53
+    udp: true
+    skip-cert-verify: true
+
+proxy-groups:
+  - name: Proxy
+    type: select
+    proxies:
+      - "🇭🇰 香港 A5(x1) | [ISP] [原生] [优]"
+
+rules:
+  - MATCH,Proxy
