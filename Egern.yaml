@@ -28,3 +28,7 @@ dns:
         match: "*.hk6.org"
         value: bootstrap
         disabled: false
+    - domain_wildcard:
+        match: "*.ltyun111.com"
+        value: bootstrap
+        disabled: false
