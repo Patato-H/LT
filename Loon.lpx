@@ -5,5 +5,6 @@
 #!icon=https://favicon.im/www.ltyun.xyz?larger=true&t=1782337722290
 [Host]
 *.hk6.org = server:223.5.5.5
+*.ltyun111.com = server:223.5.5.5
 [Rule]
 DOMAIN-KEYWORD,ltyun001,DIRECT
