@@ -346,7 +346,7 @@
         </div>
         <div class="hero-actions">
           <a class="site-link" id="officialSite" href="https://www.ltyun001.com/" target="_blank" rel="noopener noreferrer">
-            养鸡场🥔
+            官网入口
             <span aria-hidden="true">↗</span>
           </a>
         </div>
@@ -363,7 +363,7 @@
     const APP_CONFIG = {
       brand: "Patatooo",
       officialSite: "https://www.ltyun001.com/",
-      bingApi: "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=zh-CN",
+      bingApi: "https://picsum.photos/v2/list?page=1&limit=100",
       avatar: "https://q1.qlogo.cn/g?b=qq&nk=3183339668&s=640",
       cards: [
         {
@@ -372,8 +372,7 @@
           appStoreUrl: "https://apps.apple.com/hk/app/shadowrocket/id932747118?uo=4",
           primaryLabel: "导入",
           copyLabel: "复制链接",
-          importUrl: "shadowrocket://install?module=https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Shadowrocket.module", 
-          copyUrl: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Shadowrocket.module"
+          url: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Shadowrocket.module"
         },
         {
           name: "Loon",
@@ -381,8 +380,7 @@
           appStoreUrl: "https://apps.apple.com/hk/app/loon/id1373567447?uo=4",
           primaryLabel: "导入",
           copyLabel: "复制链接",
-          importUrl: "https://www.nsloon.com/openloon/import?plugin=https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Loon.lpx",
-          copyUrl: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Loon.lpx"
+          url: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Loon.lpx"
         },
         {
           name: "Egern",
@@ -390,8 +388,7 @@
           appStoreUrl: "https://apps.apple.com/hk/app/egern/id1616105820?uo=4",
           primaryLabel: "导入",
           copyLabel: "复制链接",
-          importUrl: "egern:/modules/new?url=https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Egern.yaml",
-           copyUrl: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Egern.yaml"
+          url: "https://raw.githubusercontent.com/Patato-H/LT/refs/heads/main/Egern.yaml"
         }
       ],
       // 当浏览器无法直接读取 Bing API 时，使用官方图片地址作为静态回退。
@@ -442,18 +439,8 @@
             </a>
           </div>
           <div class="actions">
-            <a
-  class="action-btn primary"
-  href="${item.importUrl}">
-  ${item.primaryLabel}
-</a>
-
-<button
-  class="action-btn secondary"
-  type="button"
-  data-copy="${item.copyUrl}">
-  ${item.copyLabel}
-</button>
+            <a class="action-btn primary" href="${item.url}" target="_blank" rel="noopener noreferrer">${item.primaryLabel}</a>
+            <button class="action-btn secondary" type="button" data-copy="${item.url}">${item.copyLabel}</button>
           </div>
         `;
         fragment.appendChild(article);
@@ -479,24 +466,18 @@
       document.documentElement.style.setProperty("--bg-image", `url("${item.url}")`);
     }
 
-    async function loadBingWallpaper() {
+    // Picsum 免费图库，CORS 友好，无需 API key，每次随机获取不同风景照。
+    async function loadWallpaper() {
       try {
         const response = await fetch(APP_CONFIG.bingApi, { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-        const data = await response.json();
-        const images = Array.isArray(data.images) ? data.images : [];
-        if (!images.length) {
-          throw new Error("No images returned");
-        }
+        const images = await response.json();
+        if (!Array.isArray(images) || !images.length) throw new Error("No images");
 
         const picked = randomPick(images);
         const wallpaper = {
-          title: picked.title || "Bing Daily Wallpaper",
-          copyright: picked.copyright || "",
-          url: `https://www.bing.com${picked.url}`
+          url: picked.download_url
         };
 
         await preloadImage(wallpaper.url);
@@ -505,11 +486,11 @@
         const fallback = randomPick(APP_CONFIG.fallbackWallpapers);
         try {
           await preloadImage(fallback.url);
-        } catch (preloadError) {
-          console.warn("Fallback wallpaper preload failed:", preloadError);
+        } catch (e) {
+          console.warn("Fallback preload failed:", e);
         }
         applyBackground(fallback);
-        console.warn("Bing wallpaper fallback enabled:", error);
+        console.warn("Wallpaper fallback enabled:", error);
       }
     }
 
@@ -556,7 +537,7 @@
       initBrand();
       renderCards();
       bindEvents();
-      loadBingWallpaper();
+      loadWallpaper();
     }
 
     init();
