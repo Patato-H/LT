@@ -1,9 +1,5 @@
-#!name=蓝通云
-#!desc=优化蓝通云入口访问策略，自动分流并提升连接稳定性。
+#!name=快冲云
+#!desc=优化快冲云入口访问策略，自动分流并提升连接稳定性。
 [Host]
 *.hk6.org = server:223.5.5.5
-*.ltyun111.com = server:223.5.5.5
-
 [Rule]
-DOMAIN-KEYWORD,ltyun001,DIRECT
-DOMAIN-SUFFIX,LTyun.org,PROXY
