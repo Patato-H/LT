@@ -16,8 +16,13 @@ const PRO_PLAN_ID = 1;   // PRO套餐
 const PRO_PRICE   = 80;  // PRO所需积分
 
 (function main() {
+  // 实际签到延迟 0~180 秒(可在 08:00~08:03 随机执行), 需配合 cron timeout 覆盖
+  var delayMs = Math.floor(Math.random() * 181) * 1000;
+  setTimeout(run, delayMs);
+})();
+function run() {
   const token = ($.getdata(TK_KEY) || "").trim();
-  if (!token) { $.msg("追盘猫", "❌ 未找到 Token", "请登录追盘猫打开一次触发抓取"); return; }
+  if (!token) { $.msg("追盘猫", "❌ 未获取 Token", "请登录追盘猫打开一次触发抓取"); return; }
   const ua = ($.getdata(UA_KEY) || "").trim() ||
     "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
   const H = { "User-Agent": ua, "Authorization": "Bearer " + token, "Content-Type": "application/json" };
@@ -33,7 +38,7 @@ const PRO_PRICE   = 80;  // PRO所需积分
     $.get(BASE+"/vip/my-plan",    H, (o,x)=>{ if(o) plan=x.data;    fin(); });
     $.get(BASE+"/invite/info",    H, (o,x)=>{ if(o) invite=x.data;  fin(); });
   });
-})();
+} // end run (延迟后执行签到)
 
 /* ---------- 核心: 汇总 + 自动兑换 ---------- */
 function handleAll(signOk, signStatus, status, bal, plan, invite, prev) {
