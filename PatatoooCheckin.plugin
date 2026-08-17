@@ -19,7 +19,7 @@ zpan_签到时间 = input,"0 8 * * *",tag=追盘猫签到时间,desc=追盘猫�
 
 [Script]
 # ---- ① 123盘 ----
-http-request ^https?:\/\/123panfx\.com\/(my-|index\.htm|user) script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_cookie.js, requires-body=false, timeout=15, enable = {pf_cookie}, tag=123盘-Cookie
+http-request ^https?:\/\/123panfx\.com script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_cookie.js, requires-body=false, timeout=15, enable = {pf_cookie}, tag=123盘-Cookie
 cron {pf_签到时间} script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_signin.js, timeout=600, enable = {pf_sign}, tag=123盘-每日签到
 # ---- ② 追盘猫 ----
 http-request ^https?://zpanmao\.com/api script-path=https://raw.githubusercontent.com/Patato-H/LT/main/zpanmao/zpan_cookie.js, requires-body=false, timeout=15, enable = {zpan_cookie}, tag=追盘猫-Token
