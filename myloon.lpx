@@ -1,0 +1,34 @@
+#!name=Patatooo
+#!desc=自定义规则
+#!icon=https://q1.qlogo.cn/g?b=qq&nk=3183339668&s=640
+
+
+[Rule]
+
+# 策略组
+# REJECT      # 拦截广告/恶意请求
+# Patatooo    # 代理出口
+
+
+# DOMAIN-SUFFIX
+# 域名后缀匹配，例如 example.com 下所有子域名
+DOMAIN-SUFFIX,pign.indevs.in,PROXY
+DOMAIN-SUFFIX,patatooo.workers.dev,PROXY
+
+
+# DOMAIN-KEYWORD
+# 域名关键词匹配，域名包含关键词即可
+DOMAIN-KEYWORD,zijie,DIRECT
+
+
+# DOMAIN
+# 精确域名匹配，仅匹配完整域名
+DOMAIN,www.ltyun001.com,DIRECT
+DOMAIN,aedns.weixin.qq.com,DIRECT
+DOMAIN,dns.weixin.qq.com.cn,DIRECT
+DOMAIN,dns.weixin.qq.com,DIRECT
+
+
+# IP-CIDR
+# IPv4 地址段匹配
+# IP-CIDR,1.1.1.0/24,DIRECT
