@@ -53,7 +53,7 @@ function handleAll(signOk, signStatus, status, bal, plan, invite, prev) {
     if (gain != null && gain !== 0) s += " (本次" + (gain>0?"+":"") + gain + ")";
     L.push(s);
   }
-  if (cur != null && cur < PRO_PRICE) L.push("距PRO("+PRO_PRICE+"分): 还差 " + (PRO_PRICE-cur) + " 分");
+  if (cur != null && cur < PRO_PRICE) {} // 距离提示统一在会员块里算
   if (invite && invite.stats) {
     L.push("邀请码 " + (invite.invite_code||"-") + "・已邀 " + (invite.stats.total_invites||0) + " 人");
     if (invite.milestone_info && invite.milestone_info.next_count)
@@ -61,25 +61,24 @@ function handleAll(signOk, signStatus, status, bal, plan, invite, prev) {
   }
 
   // 会员状态
-  let isActive = false, vipExp = null;
+  let vipExp = null, isVip = false;
   if (plan) {
-    vipExp  = plan.vip_expires_at ? String(plan.vip_expires_at).slice(0,10) : null;
-    isActive = (plan.is_vip === true || (plan.current_plan && plan.current_plan.id !== 0)) &&
-               (!vipExp || new Date(vipExp+"T23:59:59").getTime() > Date.now());
+    vipExp = plan.vip_expires_at ? String(plan.vip_expires_at).slice(0,10) : null;
+    isVip  = (plan.is_vip === true) || (plan.current_plan && plan.current_plan.id !== 0);
   }
-  if (isActive)        L.push("会员: VIP 有效期至 " + vipExp);
-  else if (plan)       L.push("会员: 免费版 → PRO 需 " + PRO_PRICE + " 分/30天");
+  L.push("会员: " + (isVip ? ("VIP 有效期至 " + vipExp + " · 续费模式") : ("免费版 → PRO 需 " + PRO_PRICE + " 分/30天")));
 
-  // ---- 自动兑换 PRO ----
-  const shouldRedeem = (cur != null && cur >= PRO_PRICE && !isActive);
-  if (shouldRedeem) {
-    L.push("→ 积分已够，自动兑换 PRO …");
+  // ---- 自动兑换 PRO(积分够即兑, 已是VIP也兑以延长时长) ----
+  const canRedeem = (cur != null && cur >= PRO_PRICE);
+  if (canRedeem) {
+    L.push("→ 积分已够 " + PRO_PRICE + "，自动兑换 PRO +30天 …");
     $.post(BASE + "/vip/point-redeem", H, JSON.stringify({ plan_id: PRO_PLAN_ID }), (ok, d) => {
-      if (ok) L.push("🎉 已自动开通 PRO(30天)");
+      if (ok) L.push("🎉 已自动兑换 PRO，会员+30天");
       else     L.push("⚠ 兑换失败: " + getMsg(d));
       notify(L);
     });
   } else {
+    if (cur != null) L.push("距下次兑换(" + PRO_PRICE + "分)还差 " + (PRO_PRICE - cur) + " 分");
     notify(L);
   }
 }
