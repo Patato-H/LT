@@ -1,29 +1,25 @@
 #!name = Patatooo签到集合
-#!version = 2.1
-#!desc = 集合签到：①123盘(123panfx.com)每日签到领经验金币；②追盘猫(zpanmao.com)每日签到领积分，积分够80分自动兑换PRO会员(30天，已是VIP则续期延长)，兑换后回读余额与新到期日展示。两站各自「抓取」+「签到」独立开关按 cron 定时执行并推通知，通知含详细数据(签到/积分/会员/邀请)。首次使用需信任证书并开 MITM 总开关。
+#!version = 2.2
+#!desc = ①123盘(123panfx.com)每日00:00自动签到领经验金币；②追盘猫(zpanmao.com)每日08:00随机签到领积分，积分够80分自动兑换PRO会员(30天，已是VIP则续期延长)。两站含抓取Cookie/Token开关+签到开关，通知展示详细数据。
 #!date = 2026-8-18
 #!author = @Patatooo
 #!icon = https://q1.qlogo.cn/g?b=qq&nk=3183339668&s=640
 #!loon_version = 3.2.0(600)
-#!tag = 签到, Cookie, Token, 网盘, MITM
+#!tag = 签到, Cookie, MITM
 
 [Argument]
-# ================= ① 123盘 =================
-pf_cookie = switch,true,tag=★123盘-抓Cookie,desc=开启后登录并打开123panfx.com任意页,自动保存bbs_sid/bbs_token
-pf_sign = switch,true,tag=★123盘-签到,desc=按下方时间每天自动签到123panfx
-pf_签到时间 = input,"0 0 * * *",tag=123盘签到时间,desc=123盘签到时间(默认每天00:00)
-# ================= ② 追盘猫 =================
-zpan_cookie = switch,true,tag=★追盘猫-抓Token,desc=开启后登录zpanmao.com打开任意页,自动保存Bearer token
-zpan_sign = switch,true,tag=★追盘猫-签到,desc=按下方时间每天自动签到追盘猫
-zpan_签到时间 = input,"0 8 * * *",tag=追盘猫签到时间,desc=追盘猫签到时间(默认每天08:00)
+pf_cookie = switch,true,tag=123盘抓Cookie,desc=开启后打开123panfx.com自动存bbs_sid/token
+pf_sign = switch,true,tag=123盘签到
+pf_cron = input,"0 0 * * *",tag=123盘签到时间
+zpan_cookie = switch,true,tag=追盘猫抓Token,desc=开启后打开zpanmao.com自动存token
+zpan_sign = switch,true,tag=追盘猫签到
+zpan_cron = input,"0 8 * * *",tag=追盘猫签到时间
 
 [Script]
-# ---- ① 123盘 ----
-http-request ^https?:\/\/123panfx\.com script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_cookie.js, requires-body=false, timeout=15, enable = {pf_cookie}, tag=123盘-Cookie
-cron {pf_签到时间} script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_signin.js, timeout=600, enable = {pf_sign}, tag=123盘-每日签到
-# ---- ② 追盘猫 ----
-http-request ^https?://zpanmao\.com/api script-path=https://raw.githubusercontent.com/Patato-H/LT/main/zpanmao/zpan_cookie.js, requires-body=false, timeout=15, enable = {zpan_cookie}, tag=追盘猫-Token
-cron {zpan_签到时间} script-path=https://raw.githubusercontent.com/Patato-H/LT/main/zpanmao/zpan_signin.js, timeout=600, enable = {zpan_sign}, tag=追盘猫-每日签到
+http-request ^https?:\/\/123panfx\.com script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_cookie.js, requires-body=false, timeout=15, enable={pf_cookie}, tag=123盘Cookie
+cron {pf_cron} script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_signin.js, timeout=600, enable={pf_sign}, tag=123盘签到
+http-request ^https?:\/\/zpanmao\.com\/api script-path=https://raw.githubusercontent.com/Patato-H/LT/main/zpanmao/zpan_cookie.js, requires-body=false, timeout=15, enable={zpan_cookie}, tag=追盘猫Token
+cron {zpan_cron} script-path=https://raw.githubusercontent.com/Patato-H/LT/main/zpanmao/zpan_signin.js, timeout=600, enable={zpan_sign}, tag=追盘猫签到
 
 [MITM]
 hostname = 123panfx.com, zpanmao.com
