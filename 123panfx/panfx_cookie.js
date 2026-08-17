@@ -2,8 +2,8 @@
  * 123panfx · Cookie 抓取
  *
  * 用法：登录 123panfx.com 后,用 Safari/浏览器打开任意站内页面,
- * 自动抓取请求头的 bbs_sid / bbs_token 并保存。
- * 收到 "✅ Cookie 获取成功" 即完成,之后每天自动签到。
+ * 自动从请求头抓取 bbs_sid / bbs_token 并保存。
+ * 收到 "✅ Cookie 已保存" 即完成,之后每天自动签到。
  *
  * 兼容 Loon / Surge / QuantumultX / Shadowrocket
  * 模式：http-request
@@ -11,43 +11,56 @@
 
 const $ = new Env("123PanFx [Cookie]");
 
-const CK_KEY   = "panfx_cookie";   // 完整 Cookie
-const UA_KEY   = "panfx_ua";       // User-Agent(跟随同步,防风控)
+const CK_KEY = "panfx_cookie";   // 完整 Cookie
+const UA_KEY = "panfx_ua";       // User-Agent(防风控)
 
 (function main() {
-  const cookie = ($request.headers["Cookie"] || $request.headers["cookie"] || "").trim();
-  if (!cookie) { $.done(); return; }
-  // 只需含登录态关键字段才存
-  if (!/bbs_sid=/.test(cookie)) { $.done(); return; }
+  // 兼容不同工具取请求头
+  const h = $request.headers || {};
+  const cookie = (h["Cookie"] || h["cookie"] || "").trim();
+  const ua = (h["User-Agent"] || h["user-agent"] || "").trim();
 
-  const ua = ($request.headers["User-Agent"] || $request.headers["user-agent"] || "").trim();
-  const old = $.getdata(CK_KEY) || "";
-  // 只监控关键 cookie 段的变化,避免 bbs_token 周期性换导致误报
-  const sig = (cookie.match(/bbs_sid=[^;]+/) || [""])[0];
+  // 调试日志：确认脚本已被调用
+  $.log("触发抓取检测 | cookie长度=" + cookie.length + " | 含bbs_sid=" + /bbs_sid=/.test(cookie) + " | 含bbs_token=" + /bbs_token=/.test(cookie));
+
+  if (!cookie || !/bbs_sid=/.test(cookie)) {
+    // cookie 不在请求头(用户可能未登录/未走Loon) —— 只记日志，不打扰
+    $.done(); return;
+  }
 
   if (ua) $.setdata(ua, UA_KEY);
 
-  // 若 sid 未变,静默跳过(防每次刷页都弹通知)
-  if (old.indexOf(sig) !== -1 && old.indexOf("bbs_token") !== -1) {
+  const old = $.getdata(CK_KEY) || "";
+  // 用 bbs_sid+token 变化来判断是否需要更新(避免 token 周期替换误报警)
+  const newSig = (cookie.match(/bbs_sid=[^;]+/) || [""])[0] +
+                 (cookie.match(/bbs_token=[^;]+/) || [""])[0];
+  const oldSig = (old.match(/bbs_sid=[^;]+/) || [""])[0] +
+                 (old.match(/bbs_token=[^;]+/) || [""])[0];
+
+  // 已存且未变 => 静默，防止每次刷页都弹通知
+  if (old && oldSig === newSig) {
+    $.log("Cookie 未变化,跳过");
     $.done(); return;
   }
 
   $.setdata(cookie, CK_KEY);
-  $.msg("123PanFx", "✅ 123盘 Cookie 已获取", "自动签到已就绪");
+  $.msg("123PanFx", "✅ 123盘 Cookie 已保存", "自动签到已就绪");
+  $.log("已保存 Cookie");
   $.done();
 })();
 
-// ======== 通用 Env 封装（兼容 Surge/Loon/QuanX） ========
+// ======== 通用 Env 封装（兼容 Surge/Loon/QuanX/Shadowrocket） ========
 function Env(s) {
   this.name = s;
   this.isSurge = () => typeof $httpClient !== "undefined";
+  this.isNode = () => typeof require !== "undefined" && typeof $httpClient === "undefined";
   this.isQuanX = () => typeof $task !== "undefined";
   this.isLoon = () => typeof $loon !== "undefined";
-  this.log = (...a) => console.log(a.join("\n"));
+  this.log = (...a) => { try { console.log(a.join(" ")); } catch(e){} };
   this.msg = (t = this.name, s = "", b = "") => {
-    if (this.isSurge() || this.isLoon()) $notification.post(t, s, b);
-    else if (this.isQuanX()) $notify(t, s, b);
-    console.log(["", "====📣" + t + "====", s, b].filter(Boolean).join("\n"));
+    if (this.isSurge() || this.isLoon()) { $notification.post(t, s, b); }
+    else if (this.isQuanX()) { $notify(t, s, b); }
+    else { try { console.log("【" + t + "】" + s + " " + b); } catch(e){} }
   };
   this.getdata = (k) => {
     if (this.isSurge() || this.isLoon()) return $persistentStore.read(k);
@@ -59,5 +72,5 @@ function Env(s) {
     if (this.isQuanX()) return $prefs.setValueForKey(v, k);
     return false;
   };
-  this.done = (v = {}) => { if (typeof $done !== "undefined") $done(v); };
+  this.done = () => { if (typeof $done !== "undefined") $done(); };
 }
