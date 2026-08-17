@@ -1,5 +1,6 @@
 #!name = 123盘自动签到
-#!desc = 123分享社区(123panfx.com)每日自动签到，领积分。开启「抓取Cookie」后，用 Safari/浏览器登录网站并打开任意页面，经 MITM 解密读取 HTTPS 请求头中的 bbs_sid/bbs_token 自动保存(收到✅通知即成功，后续 Cookie 变化自动更新)。开启「自动签到」后按你设定的 cron 定时执行并推送结果(成功/已签/失效)。首次使用需信任 Loon 根证书并打开 MITM 总开关。
+#!version = 2.0
+#!desc = 123分享社区(123panfx.com)每日自动签到。开启「抓取Cookie」后，用 Safari/浏览器登录网站并打开任意页面，经 MITM 解密读取 HTTPS 请求头中的 bbs_sid/bbs_token 自动保存(收到✅通知即成功)。开启「自动签到」后按 cron 定时执行，通知会显示版本、本次获得经验/金币、当前累计经验/金币(成功/已签/失效)。首次使用需信任 Loon 根证书并打开 MITM 总开关。
 #!date = 2026-8-18
 #!author = @Patatooo
 #!icon = https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/icon/panfx_icon_256.png
