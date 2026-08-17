@@ -1,6 +1,6 @@
 #!name = Patatooo签到集合
 #!version = 1.0
-#!desc = 集合签到：①123盘(123panfx.com)每日签到领经验金币；②追盘猫(zpanmao.com)每日签到领积分。两站各自「抓取」+「签到」独立开关按 cron 定时执行并推通知。首次使用需信任证书并开 MITM 总开关。
+#!desc = 集合签到：①123盘(123panfx.com)每日签到领经验金币；②追盘猫(zpanmao.com)每日签到领积分，积分攒到80分自动兑换PRO会员(30天)。两站各自「抓取」+「签到」独立开关按 cron 定时执行并推通知，通知含详细数据(签到/积分/会员/邀请)。首次使用需信任证书并开 MITM 总开关。
 #!date = 2026-8-18
 #!author = @Patatooo
 #!icon = https://q1.qlogo.cn/g?b=qq&nk=3183339668&s=640
@@ -19,10 +19,10 @@ zpan_签到时间 = input,"0 8 * * *",tag=追盘猫签到时间,desc=追盘猫�
 
 [Script]
 # ---- ① 123盘 ----
-http-request ^https?:\/\/123panfx\.com script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_cookie.js, requires-body=false, timeout=15, enable = {pf_cookie}, tag=123盘-Cookie
+http-request ^https?:\/\/123panfx\.com\/(my-|index\.htm|user) script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_cookie.js, requires-body=false, timeout=15, enable = {pf_cookie}, tag=123盘-Cookie
 cron {pf_签到时间} script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_signin.js, timeout=600, enable = {pf_sign}, tag=123盘-每日签到
 # ---- ② 追盘猫 ----
-http-request ^https?://zpanmao\.com script-path=https://raw.githubusercontent.com/Patato-H/LT/main/zpanmao/zpan_cookie.js, requires-body=false, timeout=15, enable = {zpan_cookie}, tag=追盘猫-Token
+http-request ^https?://zpanmao\.com/api script-path=https://raw.githubusercontent.com/Patato-H/LT/main/zpanmao/zpan_cookie.js, requires-body=false, timeout=15, enable = {zpan_cookie}, tag=追盘猫-Token
 cron {zpan_签到时间} script-path=https://raw.githubusercontent.com/Patato-H/LT/main/zpanmao/zpan_signin.js, timeout=600, enable = {zpan_sign}, tag=追盘猫-每日签到
 
 [MITM]
