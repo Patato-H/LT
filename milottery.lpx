@@ -1,0 +1,15 @@
+#!name=小米抽奖
+#!desc=小米商城「狂欢礼」抽奖助手：抓取 Cookie 与每日定时签到，两个功能独立开关。开启「抓取Cookie」后进入小米商城 App 的抽奖活动页触发 Cookie 捕获（收到通知即成功）；开启「定时签到」后每天早上 8:30 自动签到，两个开关可分别控制。
+#!icon=https://raw.githubusercontent.com/MaYIHEI/pin/refs/heads/main/app/mishop.png
+#!tag=签到, 小米
+
+[Argument]
+milottery_cookie = switch,false,tag=抓取Cookie,desc=开启后进入小米商城 App「狂欢礼」抽奖活动页触发 Cookie 获取
+milottery_cron = switch,false,tag=定时签到,desc=开启后每天早上 8:30 自动执行小米抽奖签到
+
+[Script]
+http-request ^https:\/\/shop-api\.retail\.mi\.com\/mtop\/navi\/venue\/batch tag=小米抽奖 Cookie, script-path=https://raw.githubusercontent.com/MaYIHEI/paperclip/refs/heads/main/app/milottery/milottery.js, requires-body=true, img-url=https://raw.githubusercontent.com/MaYIHEI/pin/refs/heads/main/app/mishop.png, enable={milottery_cookie}
+cron "30 8 * * *" script-path=https://raw.githubusercontent.com/MaYIHEI/paperclip/refs/heads/main/app/milottery/milottery.js, tag=小米抽奖签到, img-url=https://raw.githubusercontent.com/MaYIHEI/pin/refs/heads/main/app/mishop.png, timeout=240, enable={milottery_cron}
+
+[MITM]
+hostname = shop-api.retail.mi.com
