@@ -8,7 +8,7 @@ const SIGN_URL = "https://123panfx.com/my-sign.htm", INFO_URL = "https://123panf
 
 (function main() {
   const cookie = ($.getdata(CK_KEY) || "").trim();
-  if (!cookie) { $.msg("123盘", "❌ 未找到 Cookie", "请打开 123panfx.com 触发抓取"); return; }
+  if (!cookie) { $.msg("123盘", "❌ 未获取 Cookie", "请打开 123panfx.com 触发抓取"); return; }
   const ua = ($.getdata(UA_KEY) || "").trim() ||
     "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1";
   const H = { "User-Agent": ua, "Cookie": cookie, "Referer": "https://123panfx.com/", "X-Requested-With": "XMLHttpRequest" };
