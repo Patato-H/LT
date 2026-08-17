@@ -1,7 +1,7 @@
 #!name = Patatooo签到集合
 #!version = 2.2
-#!desc = ①123盘(123panfx.com)每日00:00自动签到领经验金币；②追盘猫(zpanmao.com)每日08:00随机签到领积分，积分够80分自动兑换PRO会员(30天，已是VIP则续期延长)。两站含抓取Cookie/Token开关+签到开关，通知展示详细数据。
-#!date = 2026-8-18
+#!desc = [v2.2] 123盘00:00自动签到 + 追盘猫08:00随机签(80分自动兑PRO续期)，含抓Cookie/Token开关，通知详细数据。
+#!date = 2026-8-18 05:02
 #!author = @Patatooo
 #!icon = https://q1.qlogo.cn/g?b=qq&nk=3183339668&s=640
 #!loon_version = 3.2.0(600)
