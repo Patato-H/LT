@@ -71,11 +71,15 @@ function handleAll(signOk, signStatus, status, bal, plan, invite, prev) {
   // ---- 自动兑换 PRO(积分够即兑, 已是VIP也兑以延长时长) ----
   const canRedeem = (cur != null && cur >= PRO_PRICE);
   if (canRedeem) {
-    L.push("→ 积分已够 " + PRO_PRICE + "，自动兑换 PRO +30天 …");
+    const preBal = cur, preExp = vipExp, preTier = isVip ? "VIP" : "免费版";
+    L.push("→ 积分已够 " + PRO_PRICE + "，自动兑换 PRO …");
     $.post(BASE + "/vip/point-redeem", H, JSON.stringify({ plan_id: PRO_PLAN_ID }), (ok, d) => {
-      if (ok) L.push("🎉 已自动兑换 PRO，会员+30天");
-      else     L.push("⚠ 兑换失败: " + getMsg(d));
-      notify(L);
+      if (!ok) { L.push("⚠ 兑换失败: " + getMsg(d)); notify(L); return; }
+      // 兑换成功 → 回读新余额 & 新到期日
+      let _n = 0;
+      const fin = () => { if (++_n >= 2) { notify(L); } };
+      $.get(BASE+"/points/balance", H, (o,x)=>{ if(o&&x.data) { const nb=x.data.balance!=null?x.data.balance:x.data.available_points; L.push("🎉 兑换成功: 余额 " + preBal + " → " + nb + " 分"); } fin(); });
+      $.get(BASE+"/vip/my-plan", H, (o,x)=>{ if(o&&x.data) { const ne=x.data.vip_expires_at?String(x.data.vip_expires_at).slice(0,10):"?"; L.push("会员: " + (preTier==="VIP"?"VIP":"免费版") + " → PRO, 有效期至 " + ne); L.push("时长: 原到期" + (preExp||"—") + " → " + ne + " (+30天)"); } fin(); });
     });
   } else {
     if (cur != null) L.push("距下次兑换(" + PRO_PRICE + "分)还差 " + (PRO_PRICE - cur) + " 分");
