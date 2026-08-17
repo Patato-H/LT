@@ -1,122 +1,71 @@
 /**
- * 123panfx.com 自动签到 v2.0 -- Loon/QuanX/Surge 免填 Cookie 版
- *
- * Cookie 由 panfx_cookie.js 自动抓取存入 $persistentStore("panfx_cookie")
- * cron 签到后读取「会员中心」的经验/金币数值，并通过与上次差值计算本次获得。
- * 通知内容：本次获得(经验/金币) + 当前总数(经验/金币)。版本号见插件信息。#!version.
- * cron 建议: 0 8 * * *
+ * 123panfx.com(123分享社区) 自动签到 v2.1 -- 详细数据版
+ * Cookie 自动抓取，签到后展示经验/金币/等级/升级进度。
  */
-const $ = new Env("123PanFx [签到]");
-
-const VERSION = "v2.0";
-const CK_KEY   = "panfx_cookie";
-const UA_KEY   = "panfx_ua";
-const BAL_KEY  = "panfx_balance";   // 上次签到后的余额 {exp,gold}
-const SIGN_URL = "https://123panfx.com/my-sign.htm";
-const INFO_URL = "https://123panfx.com/my-credits.htm";
+const $ = new Env("123盘 [签到]");
+const CK_KEY = "panfx_cookie", UA_KEY = "panfx_ua", BAL_KEY = "panfx_balance";
+const SIGN_URL = "https://123panfx.com/my-sign.htm", INFO_URL = "https://123panfx.com/my-credits.htm";
 
 (function main() {
   const cookie = ($.getdata(CK_KEY) || "").trim();
-  if (!cookie) {
-    $.msg("123PanFx", "❌ 未找到 Cookie", "请用 Safari 打开 123panfx.com 触发抓取");
-    $.done(); return;
-  }
+  if (!cookie) { $.msg("123盘", "❌ 未找到 Cookie", "请打开 123panfx.com 触发抓取"); return; }
   const ua = ($.getdata(UA_KEY) || "").trim() ||
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1";
+  const H = { "User-Agent": ua, "Cookie": cookie, "Referer": "https://123panfx.com/", "X-Requested-With": "XMLHttpRequest" };
+  var prev = safeParse($.getdata(BAL_KEY));
 
-  const headers = {
-    "User-Agent": ua,
-    "Cookie": cookie,
-    "Referer": "https://123panfx.com/",
-    "X-Requested-With": "XMLHttpRequest",
-    "Content-Type": "application/x-www-form-urlencoded"
-  };
-
-  // 步骤1：签到
-  $httpClient.post({ url: SIGN_URL, method: "POST", headers: headers, body: "" }, (error, res, data) => {
-    if (error) { $.msg("123PanFx", "❌ 签到失败", "网络错误 " + error); $.done(); return; }
-    let code, msg = data;
-    try { let o = JSON.parse(data); code = o.code; msg = o.message || JSON.stringify(o); } catch(e){}
-
-    // 步骤2：读经验/金币
-    $httpClient.get({ url: INFO_URL, headers: { "User-Agent": ua, "Cookie": cookie, "Referer": "https://123panfx.com/" } }, (err2, res2, html) => {
-      const bal = parseBalance(html);   // {exp, expMax, gold}
-      const prev = readPrev();          // 上次 {exp,gold} 或 null
-
-      let gainExp = null, gainGold = null;
-      if (prev && bal) {
-        gainExp  = bal.exp  - prev.exp;
-        gainGold = bal.gold - prev.gold;
+  $.post(SIGN_URL, H, "", function (ok, d) {
+    var m = getMsg(d);
+    var signed = /已签到|already/i.test(m);
+    $.get(INFO_URL, { "User-Agent": ua, "Cookie": cookie, "Referer": "https://123panfx.com/" }, function (o2, html) {
+      var info = parseInfo(html);
+      var curE = info ? info.exp : null, curG = info ? info.gold : null;
+      var gainE = null, gainG = null;
+      if (prev) { if (curE != null && prev.e != null) gainE = curE - prev.e; if (curG != null && prev.g != null) gainG = curG - prev.g; }
+      if (info && info.exp != null && info.gold != null) $.setdata(JSON.stringify({ e: info.exp, g: info.gold }), BAL_KEY);
+      var L = [];
+      L.push("状态: " + (signed ? "✅ 已签到" : "✅ 签到成功"));
+      var parts = [];
+      if (gainE && gainE !== 0) parts.push((gainE > 0 ? "+" : "") + gainE + "经验");
+      if (gainG && gainG !== 0) parts.push((gainG > 0 ? "+" : "") + gainG + "金币");
+      if (parts.length) L.push("本次获得: " + parts.join("、"));
+      if (info) {
+        L.push("经验: " + info.exp + (info.expMax ? " (距升级还差" + (info.expMax - info.exp) + ")" : ""));
+        L.push("金币: " + info.gold);
+        L.push("等级: Lv." + info.level + (info.rank ? "・" + info.rank : ""));
       }
-
-      // 组装通知
-      let title = "123盘签到";
-      let subtitle = ""; let body2 = "";
-      if (code == 0) {
-        title = "✅ 签到成功";
-      } else if (/签到过/.test(msg)) {
-        title = "今天已签到";
-      } else {
-        title = "⚠️ 签到异常: " + msg;
-      }
-
-      let lines = [];
-      if (bal) {
-        lines.push("当前经验 " + bal.exp + "　金币 " + bal.gold);
-      }
-      if (gainExp !== null && gainGold !== null) {
-        let de = gainExp !== 0 ? (gainExp > 0 ? "+" + gainExp : "" + gainExp) + " 经验" : "";
-        let dg = gainGold !== 0 ? (gainGold > 0 ? "+" + gainGold : "" + gainGold) + " 金币" : "";
-        if (de || dg) lines.unshift("本次获得 " + [de, dg].filter(Boolean).join("、"));
-      }
-
-      // 存新余额 ▲ 用最新数值
-      if (bal) savePrev(bal);
-
-      $.msg(title, lines.join(" | "), body2);
-      $.done();
+      notify(L);
     });
   });
 })();
 
-// 从 "我的积分" 页解析经验/金币
-function parseBalance(html) {
-  if (!html) return null;
-  const expM = (html.match(/经验[：:]\s*(\d+)\s*\/\s*(\d+)/) || html.match(/经验值\s*<\/span>\s*(\d+)\s*\/\s*(\d+)/));
-  const goldM = (html.match(/wallet-value-2">\s*(\d+)/) || html.match(/金币\s*<\s*\/div>\s*<div[^>]*>\s*(\d+)/));
-  if (!expM && !goldM) return null;
+function parseInfo(h) {
+  if (!h) return null;
+  var em = h.match(/经验[：:]\s*(\d+)\s*\/\s*(\d+)/);
+  var gm = h.match(/wallet-value-2">\s*(\d+)/);
+  var lm = h.match(/Lv\.(\d+)/);
+  var rm = h.match(/user-level-card-groupname"[^>]*>([^<]+)/);
   return {
-    exp:  expM ? parseInt(expM[1]) : 0,
-    expMax: expM ? parseInt(expM[2]) : 0,
-    gold: goldM ? parseInt(goldM[1]) : 0
+    exp: em ? parseInt(em[1]) : null,
+    expMax: em ? parseInt(em[2]) : null,
+    gold: gm ? parseInt(gm[1]) : null,
+    level: lm ? parseInt(lm[1]) : null,
+    rank: rm ? rm[1].trim() : null
   };
 }
-function readPrev(){ try { return JSON.parse($.getdata(BAL_KEY) || "null"); } catch(e){ return null; } }
-function savePrev(b){ $.setdata(JSON.stringify({ exp: b.exp, gold: b.gold }), BAL_KEY); }
+function notify(L) { $.msg("123盘", L.filter(Boolean).join("\n"), ""); $.done(); }
+function getMsg(d) { try { var o = JSON.parse(d); return o.message || ""; } catch (e) { return String(d || ""); } }
+function safeParse(s) { try { return JSON.parse(s); } catch (e) { return null; } }
 
-// ======== 通用 Env 封装 ========
-function Env(s) {
-  this.name = s;
-  this.isSurge = () => typeof $httpClient !== "undefined";
-  this.isQuanX = () => typeof $task !== "undefined";
-  this.isLoon = () => typeof $loon !== "undefined";
-  this.log = (...a) => console.log(a.join("\n"));
-  // 通知（兼容三端）
-  this.Notify = function(title, subj, body) {
-    const sub = Array.isArray(subj) ? subj.join(" | ") : subj;
-    if (this.isSurge() || this.isLoon()) $notification.post(title, sub, body);
-    else if (this.isQuanX()) $notify(title, sub, body);
-  };
-  this.msg = (t, s, b) => { this.Notify(t, s, b); };
-  this.getdata = (k) => {
-    if (this.isSurge() || this.isLoon()) return $persistentStore.read(k);
-    if (this.isQuanX()) return $prefs.valueForKey(k);
-    return null;
-  };
-  this.setdata = (v, k) => {
-    if (this.isSurge() || this.isLoon()) return $persistentStore.write(v, k);
-    if (this.isQuanX()) return $prefs.setValueForKey(v, k);
-    return false;
-  };
-  this.done = (v = {}) => { if (typeof $done !== "undefined") $done(v); };
+function Env(name) {
+  this.name = name;
+  this.isSurge = function () { return typeof $httpClient !== "undefined"; };
+  this.isQuanX = function () { return typeof $task !== "undefined"; };
+  this.isLoon = function () { return typeof $loon !== "undefined"; };
+  this.post = function (url, h, b, cb) { if (this.isSurge() || this.isLoon()) $httpClient.post({ url: url, headers: h, body: b || "" }, function (e, r, d) { cb(!e && (!r || r.status < 400), d); }); else if (this.isQuanX()) $task.fetch({ url: url, method: "POST", headers: h, body: b || "" }).then(function (r) { return r.text(); }).then(function (t) { cb(true, t); }).catch(function () { cb(false, ""); }); };
+  this.get = function (url, h, cb) { if (this.isSurge() || this.isLoon()) $httpClient.get({ url: url, headers: h }, function (e, r, d) { cb(!e && (!r || r.status < 400), d); }); else if (this.isQuanX()) $task.fetch({ url: url, method: "GET", headers: h }).then(function (r) { return r.text(); }).then(function (t) { cb(true, t); }).catch(function (e) { cb(false, ""); }); };
+  this.msg = function (t, s, b) { if (this.isSurge() || this.isLoon()) $notification.post(t, s, b); else if (this.isQuanX()) $notify(t, s, b); };
+  this.getdata = function (k) { return (this.isSurge() || this.isLoon()) ? $persistentStore.read(k) : (this.isQuanX() ? $prefs.valueForKey(k) : null); };
+  this.setdata = function (v, k) { return (this.isSurge() || this.isLoon()) ? $persistentStore.write(v, k) : (this.isQuanX() ? $prefs.setValueForKey(v, k) : false); };
+  this.done = function () { if (typeof $done !== "undefined") $done(); };
 }

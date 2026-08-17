@@ -1,84 +1,104 @@
 /**
- * 追盘猫(zpanmao.com, CloudSave Pro) 自动签到 -- Loon/QuanX/Surge
+ *.解析式签到 追盘猫(CloudSave Pro) 自动签到 v2 -- 详细数据版 + 自动兑换PRO
  *
- * Token 由 zpan_cookie.js 自动抓取存 $persistentStore("zpan_token")
- * cron 签到 POST /api/v1/checkin,读取返回的积分与连续天数，
- * 再取当前积分余额，一条通知汇报。
+ * 流程: 签到 -> 拉登录/会员/邀请/状态 ->
+ *       若 VIP 非活跃(或已过期) 且 积分>=80 -> 自动 POST /vip/point-redeem {plan_id:1}
+ *       通知按 bilibili 风格罗列数据。
  * cron 建议: 0 8 * * *
  */
 const $ = new Env("追盘猫 [签到]");
 
-const TK_KEY  = "zpan_token";
+const TK_KEY = "zpan_token";
 const UA_KEY  = "zpan_ua";
-const BASE    = "https://zpanmao.com/api/v1";
+const BAL_KEY= "zpan_balance";
+const BASE   = "https://zpanmao.com/api/v1";
+const PRO_PLAN_ID = 1;   // PRO套餐
+const PRO_PRICE   = 80;  // PRO所需积分
 
 (function main() {
   const token = ($.getdata(TK_KEY) || "").trim();
-  if (!token) {
-    $.msg("追盘猫", "❌ 未找到 Token", "请登录 zpanmao.com 打开一次触发抓取");
-    $.done(); return;
-  }
+  if (!token) { $.msg("追盘猫", "❌ 未找到 Token", "请登录追盘猫打开一次触发抓取"); return; }
   const ua = ($.getdata(UA_KEY) || "").trim() ||
     "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
-
-  const H = {
-    "User-Agent": ua,
-    "Authorization": "Bearer " + token,
-    "Referer": "https://zpanmao.com/",
-    "Accept": "application/json",
-    "Content-Type": "application/json"
-  };
+  const H = { "User-Agent": ua, "Authorization": "Bearer " + token, "Content-Type": "application/json" };
+  const prev = safeParse($.getdata(BAL_KEY));
 
   // 1. 签到
-  $httpClient.post({ url: BASE + "/checkin", headers: H, body: "{}" }, (err, res, data) => {
-    if (err) { $.msg("追盘猫", "❌ 签到失败", "网络错误 " + err); $.done(); return; }
-    let code, msg = data;
-    try { const o = JSON.parse(data); code = o.code; msg = o.message || JSON.stringify(o); } catch(e){}
-    // 部分实现 code=0 成功 / code!=0 失败或用 HTTP 状态码。宽松处理：
-    const ok = (code === 0) || (code === undefined && !/already|已|fail|error/i.test(msg));
-    const doneToday = /already|today.*sign|已签到|今天.*签/i.test(msg) || !ok;
-
-    // 2. 拉余额 + 状态
-    $httpClient.get({ url: BASE + "/points/balance", headers: H }, (e2, r2, bdata) => {
-      let balance = null;
-      try { const o = JSON.parse(bdata); balance = o.data?.available_points ?? o.available_points ?? o.data?.balance ?? null; } catch(_){}
-      const bal = balance === null ? "" : ("当前余额 " + balance + " 积分");
-
-      // 解析签到返回的积分明细
-      let detail = "";
-      try {
-        const o = JSON.parse(data);
-        const d = o.data || o;
-        let parts = [];
-        if (d.total_points != null) parts.push("+" + d.total_points + " 积分");
-        if (d.base_points != null)  parts.push("基础" + d.base_points);
-        if (d.streak_bonus > 0)     parts.push("连续加成+" + d.streak_bonus);
-        if (d.is_critical > 10)     parts.push("暴击×" + (d.is_critical / 10).toFixed(1));
-        if (d.streak_days != null)  parts.push("连续" + d.streak_days + "天");
-        detail = parts.join("、");
-      } catch(_){}
-
-      const title = ok ? "✅ 签到成功" : "今天已签到";
-      const subj = [detail, bal].filter(Boolean).join(" | ");
-      $.msg("追盘猫", title, subj || msg);
-      $.done();
-    });
+  $.post(BASE + "/checkin", H, "{}", (ok, d) => {
+    const signStatus = ok ? "成功" : getMsg(d);
+    let status=null, bal=null, plan=null, invite=null, n=0;
+    const fin = () => { if(++n>=4) handleAll(ok, signStatus, status, bal, plan, invite, prev); };
+    $.get(BASE+"/checkin/status", H, (o,x)=>{ if(o) status=x.data;   fin(); });
+    $.get(BASE+"/points/balance", H, (o,x)=>{ if(o) bal=x.data;     fin(); });
+    $.get(BASE+"/vip/my-plan",    H, (o,x)=>{ if(o) plan=x.data;    fin(); });
+    $.get(BASE+"/invite/info",    H, (o,x)=>{ if(o) invite=x.data;  fin(); });
   });
 })();
 
-// ======== 通用 Env（兼容 Surge/Loon/QuanX） ========
-function Env(s) {
-  this.name = s;
+/* ---------- 核心: 汇总 + 自动兑换 ---------- */
+function handleAll(signOk, signStatus, status, bal, plan, invite, prev) {
+  const cur = bal ? (bal.balance ?? bal.available_points ?? null) : null;
+  const prevB = prev && typeof prev.b === "number" ? prev.b : null;
+  const gain = (cur != null && prevB != null) ? cur - prevB : null;
+  if (cur != null) $.setdata(JSON.stringify({b:cur}), BAL_KEY);
+
+  const L = [];
+  L.push("签到: " + (signOk ? "✅ 成功" : "⚠ " + signStatus));
+  if (status) {
+    L.push("连续 " + (status.streak_days??"-") + " 天・最长 " + (status.max_streak??"-") + " 天・本月 " + (status.monthly_checkins??"-") + " 次");
+    if (status.next_milestone) L.push("下里程碑: 再签" + status.next_milestone.remaining + "次 → +" + status.next_milestone.bonus + "分");
+  }
+  if (cur != null) {
+    let s = "当前积分: " + cur;
+    if (gain != null && gain !== 0) s += " (本次" + (gain>0?"+":"") + gain + ")";
+    L.push(s);
+  }
+  if (cur != null && cur < PRO_PRICE) L.push("距PRO("+PRO_PRICE+"分): 还差 " + (PRO_PRICE-cur) + " 分");
+  if (invite && invite.stats) {
+    L.push("邀请码 " + (invite.invite_code||"-") + "・已邀 " + (invite.stats.total_invites||0) + " 人");
+    if (invite.milestone_info && invite.milestone_info.next_count)
+      L.push("下阶段: 达" + invite.milestone_info.next_count + "人 → 每邀+" + invite.milestone_info.next_per_invite + "分");
+  }
+
+  // 会员状态
+  let isActive = false, vipExp = null;
+  if (plan) {
+    vipExp  = plan.vip_expires_at ? String(plan.vip_expires_at).slice(0,10) : null;
+    isActive = (plan.is_vip === true || (plan.current_plan && plan.current_plan.id !== 0)) &&
+               (!vipExp || new Date(vipExp+"T23:59:59").getTime() > Date.now());
+  }
+  if (isActive)        L.push("会员: VIP 有效期至 " + vipExp);
+  else if (plan)       L.push("会员: 免费版 → PRO 需 " + PRO_PRICE + " 分/30天");
+
+  // ---- 自动兑换 PRO ----
+  const shouldRedeem = (cur != null && cur >= PRO_PRICE && !isActive);
+  if (shouldRedeem) {
+    L.push("→ 积分已够，自动兑换 PRO …");
+    $.post(BASE + "/vip/point-redeem", H, JSON.stringify({ plan_id: PRO_PLAN_ID }), (ok, d) => {
+      if (ok) L.push("🎉 已自动开通 PRO(30天)");
+      else     L.push("⚠ 兑换失败: " + getMsg(d));
+      notify(L);
+    });
+  } else {
+    notify(L);
+  }
+}
+
+function notify(lines){ $.msg("追盘猫", lines.filter(Boolean).join("\n"), ""); $.done(); }
+function getMsg(d){ try{ return (JSON.parse(d).message)||"未知"; }catch(e){ return d||"err"; } }
+function safeParse(s){ try{ return JSON.parse(s); }catch(e){ return null; } }
+
+function Env(name){
+  this.name = name;
   this.isSurge = () => typeof $httpClient !== "undefined";
   this.isQuanX = () => typeof $task !== "undefined";
-  this.isLoon = () => typeof $loon !== "undefined";
-  this.log = (...a) => { try{console.log(a.join(" "));}catch(e){} };
-  this.msg = (t = this.name, s = "", b = "") => {
-    if (this.isSurge() || this.isLoon()) $notification.post(t, s, b);
-    else if (this.isQuanX()) $notify(t, s, b);
-    else { try{console.log("【"+t+"】"+s+" "+b);}catch(e){} }
-  };
-  this.getdata = (k) => (this.isSurge()||this.isLoon()) ? $persistentStore.read(k) : (this.isQuanX() ? $prefs.valueForKey(k) : null);
-  this.setdata = (v,k) => (this.isSurge()||this.isLoon()) ? $persistentStore.write(v,k) : (this.isQuanX() ? $prefs.setValueForKey(v,k) : false);
-  this.done = () => { if (typeof $done !== "undefined") $done(); };
+  this.isLoon  = () => typeof $loon  !== "undefined";
+  // 封装 request
+  this.post = (url,H,b,cb)=>{ if(this.isSurge()||this.isLoon()) $httpClient.post({url,headers:H,body:b},(e,r,d)=>cb(!e&&(r&&r.statusCode<400),parseResp(d))); };
+  this.get  = (url,H,cb)=>{ if(this.isSurge()||this.isLoon()) $httpClient.get({url,headers:H},(e,r,d)=>cb(!e&&(r&&r.statusCode<400),parseResp(d))); };
+  this.msg = (t,s,b)=>{ if(this.isSurge()||this.isLoon()) $notification.post(t,s,b); else if(this.isQuanX()) $notify(t,s,b); };
+  this.getdata=(k)=>(this.isSurge()||this.isLoon())?$persistentStore.read(k):(this.isQuanX()?$prefs.valueForKey(k):null);
+  this.setdata=(v,k)=>(this.isSurge()||this.isLoon())?$persistentStore.write(v,k):(this.isQuanX()?$prefs.setValueForKey(v,k):false);
+  this.done=()=>{ if(typeof $done!=="undefined") $done(); };
 }
+function parseResp(d){ try{ return JSON.parse(d); }catch(e){ return {_raw:d}; } }
