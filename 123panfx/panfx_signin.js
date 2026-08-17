@@ -3,7 +3,7 @@
  *
  * Cookie 由 panfx_cookie.js 自动抓取存入 $persistentStore("panfx_cookie")
  * cron 签到后读取「会员中心」的经验/金币数值，并通过与上次差值计算本次获得。
- * 通知内容：版本号 + 本次获得(经验/金币) + 当前总数(经验/金币)
+ * 通知内容：本次获得(经验/金币) + 当前总数(经验/金币)。版本号见插件信息。#!version.
  * cron 建议: 0 8 * * *
  */
 const $ = new Env("123PanFx [签到]");
@@ -18,7 +18,7 @@ const INFO_URL = "https://123panfx.com/my-credits.htm";
 (function main() {
   const cookie = ($.getdata(CK_KEY) || "").trim();
   if (!cookie) {
-    $.msg("123PanFx " + VERSION, "❌ 未找到 Cookie", "请用 Safari 打开 123panfx.com 触发抓取");
+    $.msg("123PanFx", "❌ 未找到 Cookie", "请用 Safari 打开 123panfx.com 触发抓取");
     $.done(); return;
   }
   const ua = ($.getdata(UA_KEY) || "").trim() ||
@@ -34,7 +34,7 @@ const INFO_URL = "https://123panfx.com/my-credits.htm";
 
   // 步骤1：签到
   $httpClient.post({ url: SIGN_URL, method: "POST", headers: headers, body: "" }, (error, res, data) => {
-    if (error) { $.msg("123PanFx " + VERSION, "❌ 签到失败", "网络错误 " + error); $.done(); return; }
+    if (error) { $.msg("123PanFx", "❌ 签到失败", "网络错误 " + error); $.done(); return; }
     let code, msg = data;
     try { let o = JSON.parse(data); code = o.code; msg = o.message || JSON.stringify(o); } catch(e){}
 
@@ -69,7 +69,6 @@ const INFO_URL = "https://123panfx.com/my-credits.htm";
         let dg = gainGold !== 0 ? (gainGold > 0 ? "+" + gainGold : "" + gainGold) + " 金币" : "";
         if (de || dg) lines.unshift("本次获得 " + [de, dg].filter(Boolean).join("、"));
       }
-      lines.push("版本 " + VERSION);
 
       // 存新余额 ▲ 用最新数值
       if (bal) savePrev(bal);
