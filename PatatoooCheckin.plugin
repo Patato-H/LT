@@ -1,25 +1,96 @@
 #!name = Patatooo签到集合
-#!version = 2.2
-#!desc = [v2.2] 123盘00:00自动签到 + 追盘猫08:00随机签(80分自动兑PRO续期)，含抓Cookie/Token开关，通知详细数据。
-#!date = 2026-8-18 05:02
+#!version = 2.3
+#!desc = [v2.3] 123盘00:00自动签到 + 追盘猫08:00随机签(80分自动兑PRO续期) + 小米抽奖 + NodeSeek签到 + PingMe&WeTalk签到 + 网上国网余量查询 + B站每日等级 + 起点读书签到，各功能独立开关，含抓Cookie/Token开关，通知详细数据。
+#!date = 2026-8-18 18:40
 #!author = @Patatooo
 #!icon = https://q1.qlogo.cn/g?b=qq&nk=3183339668&s=640
 #!loon_version = 3.2.0(600)
 #!tag = 签到, Cookie, MITM
 
 [Argument]
+# ===== 123盘 =====
 pf_cookie = switch,true,tag=123盘抓Cookie,desc=开启后打开123panfx.com自动存bbs_sid/token
 pf_sign = switch,true,tag=123盘签到
 pf_cron = input,"0 0 * * *",tag=123盘签到时间
+# ===== 追盘猫 =====
 zpan_cookie = switch,true,tag=追盘猫抓Token,desc=开启后打开zpanmao.com自动存token
 zpan_sign = switch,true,tag=追盘猫签到
 zpan_cron = input,"0 8 * * *",tag=追盘猫签到时间
+# ===== 小米抽奖 =====
+milottery_cookie = switch,false,tag=小米抓Cookie,desc=开启后进入小米商城App「狂欢礼」抽奖活动页触发Cookie获取
+milottery_cron = switch,false,tag=小米定时签到,desc=开启后按下方自定义时间自动执行小米抽奖签到
+mi_cron = input,"30 7 * * *",tag=小米签到时间,desc=cron表达式，默认每天早上7:30
+# ===== NodeSeek =====
+Cookie-nodeseek = switch,true,false,tag=NodeSeek抓Token,desc=开启后登录nodeseek.com进入设置页面触发Token获取
+Task-nodeseek = switch,true,false,tag=NodeSeek每日签到,desc=定时运行nodeseek每日签到
+Cron-nodeseek = input,"0 0 9 * * *",tag=NodeSeek定时参数,desc=输入Cron表达式定时运行签到
+# ===== PingMe&WeTalk =====
+arg1 = switch,true,tag=PingMe任务
+arg2 = switch,true,tag=WeTalk任务
+arg3 = switch,true,tag=PM获取token
+arg4 = switch,true,tag=WT获取token
+arg5 = input,"0 8,20 * * *",tag=PM定时
+arg6 = input,"30 8,20 * * *",tag=WT定时
+# ===== B站每日等级任务 =====
+bili_scan = switch,false,tag=B站Cookie(扫码),desc=是否启用扫码Cookie
+bili_app = switch,true,tag=B站Cookie(APP),desc=是否启用APP Cookie
+bili_bigpoint = switch,false,tag=B站观看剧集大积分,desc=是否启用大积分任务
+bili_cron = input,"30 7 * * *",tag=B站自定义执行时间,desc=可手动更改B站脚本运行时间，默认早上7点半
+# ===== 网上国网 =====
+sgcc_enable = switch,true,false,tag=网上国网重写开关,desc=是否开启接口重写
+sgcc_cron = input,"0 9 * * *",tag=国网Crontab表达式,desc=推荐地址 "https://www.bejson.com/othertools/cron/"
+username = input,"",tag=国网登录账号,desc="https://95598.cn"或"网上国网App"的登录账号
+password = input,"",tag=国网登录密码,desc=同账号
+debug = switch,false,true,tag=国网调试模式,desc=是否开启调试模式
+show_recent_usage = switch,false,true,tag=国网展示近期用量,desc=是否展示近期耗电量
+notify_all_accounts = switch,false,true,tag=国网通知全部户号,desc=是否通知全部户号
+sgcc_timeout = input,60,tag=国网脚本最大时间,desc=脚本运行最大时间
+# ===== 起点读书 =====
+CAPTURE_ENABLE=switch,true,true,tag=起点重写开关,desc=是否开启抓取重写
+qd_cron=input,"11 2 * * *",tag=起点CRONEXP,desc=默认每天2点11分执行
+QDREADER_DEBUG=switch,false,true,tag=起点调试模式,desc=是否开启调试模式
+qd_timeout=input,60,tag=起点脚本超时,desc=脚本执行超时时间默认60秒
+QDREADER_ADV_JOB_ENABLE=switch,false,true,tag=起点激励任务,desc=开启后执行激励碎片任务
+QDREADER_EXTRA_ADV_JOB_ENABLE=switch,false,true,tag=起点每日任务,desc=开启后执行每日广告任务
+QDREADER_LOTTERY_ENABLE=switch,false,true,tag=起点每日抽奖,desc=开启后执行每日抽奖
+QDREADER_WEEKLY_EXCHANGE_ENABLE=switch,false,true,tag=起点每周兑换,desc=开启后周日自动兑换章节卡
+QDREADER_CHAPTER_CARD_ENABLE=switch,false,true,tag=起点章节卡片,desc=开启后查询章节卡信息
+QDREADER_MESSAGE_BOX_ENABLE=switch,false,true,tag=起点大咖荐书,desc=开启后处理荐书消息
+
+[Rule]
+DOMAIN, api.pingmeapp.net, PROXY
+DOMAIN, www.nodeseek.com, PROXY
+DOMAIN-SUFFIX, nodeseek.com, PROXY
 
 [Script]
+# ===== 123盘 =====
 http-request ^https?:\/\/123panfx\.com script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_cookie.js, requires-body=false, timeout=15, enable={pf_cookie}, tag=123盘Cookie
 cron {pf_cron} script-path=https://raw.githubusercontent.com/Patato-H/LT/main/123panfx/panfx_signin.js, timeout=600, enable={pf_sign}, tag=123盘签到
+# ===== 追盘猫 =====
 http-request ^https?:\/\/zpanmao\.com\/api script-path=https://raw.githubusercontent.com/Patato-H/LT/main/zpanmao/zpan_cookie.js, requires-body=false, timeout=15, enable={zpan_cookie}, tag=追盘猫Token
 cron {zpan_cron} script-path=https://raw.githubusercontent.com/Patato-H/LT/main/zpanmao/zpan_signin.js, timeout=600, enable={zpan_sign}, tag=追盘猫签到
+# ===== 小米抽奖 =====
+http-request ^https:\/\/shop-api\.retail\.mi\.com\/mtop\/navi\/venue\/batch tag=小米抽奖Cookie, script-path=https://raw.githubusercontent.com/MaYIHEI/paperclip/refs/heads/main/app/milottery/milottery.js, requires-body=true, enable={milottery_cookie}
+cron {mi_cron} script-path=https://raw.githubusercontent.com/MaYIHEI/paperclip/refs/heads/main/app/milottery/milottery.js, timeout=240, enable={milottery_cron}, tag=小米抽奖签到
+# ===== NodeSeek =====
+http-response ^https:\/\/www\.nodeseek\.com\/api\/account\/getInfo\/.+\?readme=1&signature=1&phone=1 script-path=https://gist.githubusercontent.com/Sliverkiss/2b5acc2c4960dd06618c6912302c2c7f/raw/nodeseek.js, requires-body=true, timeout=60, tag=NodeSeek每日签到Token, enable={Cookie-nodeseek}
+cron {Cron-nodeseek} script-path=https://gist.githubusercontent.com/Sliverkiss/2b5acc2c4960dd06618c6912302c2c7f/raw/nodeseek.js, timeout=60, tag=NodeSeek每日签到, enable={Task-nodeseek}
+# ===== PingMe & WeTalk =====
+cron {arg5} script-path=https://luckyday.kdns.fr/refs/heads/main/Script%20/Tasks/PingMe.js, timeout=600, enable={arg1}, tag=PingMe签到任务
+cron {arg6} script-path=https://luckyday.kdns.fr/refs/heads/main/Script%20/Tasks/WeTalk.js, timeout=600, enable={arg2}, tag=WeTalk签到任务
+http-request ^https:\/\/api\.pingmeapp\.net\/app\/queryBalanceAndBonus script-path=https://luckyday.kdns.fr/refs/heads/main/Script%20/Tasks/PingMe.js, timeout=300, enable={arg3}, tag=PingMe获取token
+http-request ^https:\/\/api\.wetalkapp\.com\/app\/queryBalanceAndBonus script-path=https://luckyday.kdns.fr/refs/heads/main/Script%20/Tasks/WeTalk.js, timeout=300, enable={arg4}, tag=WeTalk获取token
+# ===== B站每日等级任务 =====
+cron {bili_cron} script-path=https://raw.githubusercontent.com/ClydeTime/BiliBili/main/js/BiliBiliDailyBonus.js, tag=B站每日等级任务, timeout=15
+cron "41 7 * * *" script-path=https://raw.githubusercontent.com/ClydeTime/BiliBili/main/js/BiliBiliDailyBonus.js, tag=B站观看剧集大积分, enable={bili_bigpoint}, timeout=15
+http-response ^https?:\/\/app\.bilibili\.com\/x\/resource\/fingerprint\? script-path=https://raw.githubusercontent.com/ClydeTime/BiliBili/main/js/BiliBiliDailyBonus.js, tag=B站Cookie(扫码), timeout=30, enable={bili_scan}
+http-request ^https?:\/\/app\.bilibili\.com\/x\/resource\/fingerprint\? script-path=https://raw.githubusercontent.com/ClydeTime/BiliBili/main/js/BiliBiliDailyBonus.js, tag=B站Cookie(APP), enable={bili_app}
+# ===== 网上国网 =====
+http-request ^https?:\/\/api\.wsgw-rewrite\.com\/electricity\/bill\/all script-path=https://raw.githubusercontent.com/Yuheng0101/X/main/Tasks/95598/95598.js, requires-body=true, timeout={sgcc_timeout}, tag=国网接口重写, enable={sgcc_enable}
+cron {sgcc_cron} script-path=https://raw.githubusercontent.com/Yuheng0101/X/main/Tasks/95598/95598.js, timeout={sgcc_timeout}, tag=网上国网, argument=[{username}, {password}, {debug}, {show_recent_usage}, {notify_all_accounts}]
+# ===== 起点读书签到 =====
+http-response ^https?:\/\/h5\.if\.qidian\.com\/argus\/api\/v1\/user\/getlogininfo script-path=https://raw.githubusercontent.com/Yuheng0101/X/main/Tasks/QDReader/qdreader.js, requires-body=1, tag=起点读书获取Cookie, enable={CAPTURE_ENABLE}, argument=[{QDREADER_DEBUG}]
+cron {qd_cron} script-path=https://raw.githubusercontent.com/Yuheng0101/X/main/Tasks/QDReader/qdreader.js, timeout={qd_timeout}, tag=起点读书自动签到, argument=[{QDREADER_DEBUG},{QDREADER_ADV_JOB_ENABLE},{QDREADER_EXTRA_ADV_JOB_ENABLE},{QDREADER_LOTTERY_ENABLE},{QDREADER_WEEKLY_EXCHANGE_ENABLE},{QDREADER_CHAPTER_CARD_ENABLE},{QDREADER_MESSAGE_BOX_ENABLE}]
 
 [MITM]
-hostname = 123panfx.com, zpanmao.com
+hostname = 123panfx.com, zpanmao.com, shop-api.retail.mi.com, www.nodeseek.com, api.pingmeapp.net, api.wetalkapp.com, app.bilibili.com, api.wsgw-rewrite.com, h5.if.qidian.com
