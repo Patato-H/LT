@@ -30,8 +30,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if ! git diff --quiet -- GitHub520/GitHub520.plugin; then
-            git add GitHub520/GitHub520.plugin
+          if ! git diff --quiet -- GitHub520/GitHub520.lpx; then
+            git add GitHub520/GitHub520.lpx
             git commit -m "chore: update GitHub520 plugin [skip ci]"
             git push
             echo "Pushed updated plugin"
