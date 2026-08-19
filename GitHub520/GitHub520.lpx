@@ -1,5 +1,5 @@
 #!name = GitHub520 加速
-#!desc = [v1.2] GitHub520 优选 IP 直连加速（38 个域名：github.com / raw / api / avatars 等）+ GitHub 强制直连规则。数据源 521xueweihan/GitHub520，每日自动更新。更新于 2026-08-19T16:51:29+08:00
+#!desc = [v1.3] GitHub520 优选 IP 加速（38 个域名：github.com / raw / api / avatars 等）+ GitHub 分流规则（策略 PROXY，可在 App 内自定义映射）。数据源 521xueweihan/GitHub520，每日自动更新。更新于 2026-08-19T20:51:27+08:00
 #!author = @Patatooo
 #!homepage = https://github.com/521xueweihan/GitHub520
 #!date = 2026-08-19
@@ -9,25 +9,25 @@
 #!type = normal
 
 [Rule]
-DOMAIN-SUFFIX,github.com,DIRECT
-DOMAIN-SUFFIX,githubusercontent.com,DIRECT
-DOMAIN-SUFFIX,githubassets.com,DIRECT
-DOMAIN-SUFFIX,github.io,DIRECT
-DOMAIN-SUFFIX,github.blog,DIRECT
-DOMAIN-SUFFIX,githubstatus.com,DIRECT
-DOMAIN-SUFFIX,github.community,DIRECT
-DOMAIN-SUFFIX,githubcopilot.com,DIRECT
-DOMAIN-SUFFIX,vscode.dev,DIRECT
-DOMAIN,github-cloud.s3.amazonaws.com,DIRECT
-DOMAIN,github-com.s3.amazonaws.com,DIRECT
-DOMAIN,github-production-release-asset-2e65be.s3.amazonaws.com,DIRECT
-DOMAIN,github-production-repository-file-5c1aeb.s3.amazonaws.com,DIRECT
-DOMAIN,github-production-user-asset-6210df.s3.amazonaws.com,DIRECT
+DOMAIN-SUFFIX,github.com,PROXY
+DOMAIN-SUFFIX,githubusercontent.com,PROXY
+DOMAIN-SUFFIX,githubassets.com,PROXY
+DOMAIN-SUFFIX,github.io,PROXY
+DOMAIN-SUFFIX,github.blog,PROXY
+DOMAIN-SUFFIX,githubstatus.com,PROXY
+DOMAIN-SUFFIX,github.community,PROXY
+DOMAIN-SUFFIX,githubcopilot.com,PROXY
+DOMAIN-SUFFIX,vscode.dev,PROXY
+DOMAIN,github-cloud.s3.amazonaws.com,PROXY
+DOMAIN,github-com.s3.amazonaws.com,PROXY
+DOMAIN,github-production-release-asset-2e65be.s3.amazonaws.com,PROXY
+DOMAIN,github-production-repository-file-5c1aeb.s3.amazonaws.com,PROXY
+DOMAIN,github-production-user-asset-6210df.s3.amazonaws.com,PROXY
 
 [Host]
 alive.github.com = 140.82.113.26
 api.github.com = 20.205.243.168
-api.individual.githubcopilot.com = 140.82.112.22
+api.individual.githubcopilot.com = 140.82.112.21
 avatars.githubusercontent.com = 185.199.110.133
 avatars0.githubusercontent.com = 185.199.110.133
 avatars1.githubusercontent.com = 185.199.110.133
@@ -36,30 +36,30 @@ avatars3.githubusercontent.com = 185.199.110.133
 avatars4.githubusercontent.com = 185.199.110.133
 avatars5.githubusercontent.com = 185.199.110.133
 camo.githubusercontent.com = 185.199.110.133
-central.github.com = 140.82.113.22
+central.github.com = 140.82.113.21
 cloud.githubusercontent.com = 185.199.110.133
 codeload.github.com = 20.205.243.165
-collector.github.com = 140.82.114.22
+collector.github.com = 140.82.113.21
 desktop.githubusercontent.com = 185.199.110.133
 favicons.githubusercontent.com = 185.199.110.133
-github-cloud.s3.amazonaws.com = 16.15.246.33
-github-com.s3.amazonaws.com = 16.15.228.65
-github-production-release-asset-2e65be.s3.amazonaws.com = 16.15.252.54
-github-production-repository-file-5c1aeb.s3.amazonaws.com = 16.15.207.129
-github-production-user-asset-6210df.s3.amazonaws.com = 16.15.238.35
+github-cloud.s3.amazonaws.com = 16.15.223.225
+github-com.s3.amazonaws.com = 52.216.222.89
+github-production-release-asset-2e65be.s3.amazonaws.com = 16.15.183.78
+github-production-repository-file-5c1aeb.s3.amazonaws.com = 52.217.122.201
+github-production-user-asset-6210df.s3.amazonaws.com = 16.182.96.33
 github.blog = 192.0.66.2
 github.com = 20.205.243.166
-github.community = 140.82.114.17
+github.community = 140.82.112.17
 github.githubassets.com = 185.199.109.215
-github.io = 185.199.110.153
+github.io = 185.199.111.153
 github.map.fastly.net = 185.199.110.133
-githubstatus.com = 185.199.110.153
-live.github.com = 140.82.113.25
+githubstatus.com = 185.199.111.153
+live.github.com = 140.82.112.26
 media.githubusercontent.com = 185.199.110.133
 objects.githubusercontent.com = 185.199.110.133
 pipelines.actions.githubusercontent.com = 13.107.42.16
 raw.githubusercontent.com = 185.199.110.133
 user-images.githubusercontent.com = 185.199.110.133
-vscode.dev = 150.171.110.97
-education.github.com = 140.82.112.21
+vscode.dev = 150.171.110.102
+education.github.com = 140.82.114.22
 private-user-images.githubusercontent.com = 185.199.110.133

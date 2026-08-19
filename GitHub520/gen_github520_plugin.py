@@ -11,7 +11,7 @@ import urllib.request
 
 HOSTS_URL = "https://raw.hellogithub.com/hosts"
 OUT = "GitHub520/GitHub520.lpx"
-VERSION = "1.2"
+VERSION = "1.3"
 
 
 def fetch(url: str) -> str:
@@ -45,7 +45,7 @@ def parse_hosts(text: str):
 def build_plugin(mappings, update_time, today) -> str:
     lines = [
         "#!name = GitHub520 加速",
-        f"#!desc = [v{VERSION}] GitHub520 优选 IP 直连加速（{len(mappings)} 个域名：github.com / raw / api / avatars 等）+ GitHub 强制直连规则。数据源 521xueweihan/GitHub520，每日自动更新。更新于 {update_time}",
+        f"#!desc = [v{VERSION}] GitHub520 优选 IP 加速（{len(mappings)} 个域名：github.com / raw / api / avatars 等）+ GitHub 分流规则（策略 PROXY，可在 App 内自定义映射）。数据源 521xueweihan/GitHub520，每日自动更新。更新于 {update_time}",
         "#!author = @Patatooo",
         "#!homepage = https://github.com/521xueweihan/GitHub520",
         f"#!date = {today}",
@@ -55,20 +55,20 @@ def build_plugin(mappings, update_time, today) -> str:
         "#!type = normal",
         "",
         "[Rule]",
-        "DOMAIN-SUFFIX,github.com,DIRECT",
-        "DOMAIN-SUFFIX,githubusercontent.com,DIRECT",
-        "DOMAIN-SUFFIX,githubassets.com,DIRECT",
-        "DOMAIN-SUFFIX,github.io,DIRECT",
-        "DOMAIN-SUFFIX,github.blog,DIRECT",
-        "DOMAIN-SUFFIX,githubstatus.com,DIRECT",
-        "DOMAIN-SUFFIX,github.community,DIRECT",
-        "DOMAIN-SUFFIX,githubcopilot.com,DIRECT",
-        "DOMAIN-SUFFIX,vscode.dev,DIRECT",
-        "DOMAIN,github-cloud.s3.amazonaws.com,DIRECT",
-        "DOMAIN,github-com.s3.amazonaws.com,DIRECT",
-        "DOMAIN,github-production-release-asset-2e65be.s3.amazonaws.com,DIRECT",
-        "DOMAIN,github-production-repository-file-5c1aeb.s3.amazonaws.com,DIRECT",
-        "DOMAIN,github-production-user-asset-6210df.s3.amazonaws.com,DIRECT",
+        "DOMAIN-SUFFIX,github.com,PROXY",
+        "DOMAIN-SUFFIX,githubusercontent.com,PROXY",
+        "DOMAIN-SUFFIX,githubassets.com,PROXY",
+        "DOMAIN-SUFFIX,github.io,PROXY",
+        "DOMAIN-SUFFIX,github.blog,PROXY",
+        "DOMAIN-SUFFIX,githubstatus.com,PROXY",
+        "DOMAIN-SUFFIX,github.community,PROXY",
+        "DOMAIN-SUFFIX,githubcopilot.com,PROXY",
+        "DOMAIN-SUFFIX,vscode.dev,PROXY",
+        "DOMAIN,github-cloud.s3.amazonaws.com,PROXY",
+        "DOMAIN,github-com.s3.amazonaws.com,PROXY",
+        "DOMAIN,github-production-release-asset-2e65be.s3.amazonaws.com,PROXY",
+        "DOMAIN,github-production-repository-file-5c1aeb.s3.amazonaws.com,PROXY",
+        "DOMAIN,github-production-user-asset-6210df.s3.amazonaws.com,PROXY",
         "",
         "[Host]",
     ]
