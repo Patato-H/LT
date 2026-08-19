@@ -10,8 +10,8 @@ import sys
 import urllib.request
 
 HOSTS_URL = "https://raw.hellogithub.com/hosts"
-OUT = "GitHub520/GitHub520.plugin"
-VERSION = "1.0"
+OUT = "GitHub520/GitHub520.lpx"
+VERSION = "1.1"
 
 
 def fetch(url: str) -> str:
