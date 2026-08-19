@@ -1,0 +1,40 @@
+name: Update GitHub520 Plugin
+
+on:
+  schedule:
+    - cron: "30 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: github520-update
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Generate plugin
+        run: python3 GitHub520/gen_github520_plugin.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- GitHub520/GitHub520.plugin; then
+            git add GitHub520/GitHub520.plugin
+            git commit -m "chore: update GitHub520 plugin [skip ci]"
+            git push
+            echo "Pushed updated plugin"
+          else
+            echo "No changes, skip push"
+          fi
