@@ -1,0 +1,11 @@
+#!name = 抖音Cookie抓取
+#!desc = 登录抖音创作者中心后自动抓取Cookie（含HttpOnly）
+#!author = @Patatooo
+#!loon_version = 3.0.0
+#!type = normal
+
+[MITM]
+hostname = %APPEND% creator.douyin.com
+
+[Script]
+http-request ^https?:\/\/creator\.douyin\.com tag=抖音Cookie抓取, script-path=https://raw.githubusercontent.com/Patato-H/LT/main/douyin/douyin_cookie.js
