@@ -4,6 +4,14 @@ author: Patatooo
 homepage: https://ltyun001.com
 icon: https://favicon.im/www.ltyun.xyz?larger=true&t=1782337722290
 
+compat_arguments:
+  PROXY: PROXY
+compat_arguments_schema:
+  PROXY:
+    name: 策略组
+    description: 蓝通云相关域名走哪个策略
+    default_value: PROXY
+
 rules:
 - domain_keyword:
     match: ltyun001
