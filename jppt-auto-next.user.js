@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         轨道云课堂 · 自动连播 v2.9.7
+// @name         轨道云课堂 · 自动连播 v2.9.8
 // @namespace    patatooo.jppt
-// @version      2.9.7
+// @version      2.9.8
 // @description  我的课程-自选课程队列驱动：自动 2 倍速、按剩余学时/2 定时到点检验、课程完成自动下一门、评估自动满分提交（问答留空）；不 seek、不跳秒、不碰考试
 // @author       Patatooo
 // @match        https://jppt.hfgdjt.com/*
@@ -75,6 +75,7 @@
   };
   var doneCourses = {};                // 已确认结业的课程名（内存级）
   var doneEval = {};                   // 已提交过评估的课程名
+  var doneStudy = {};                  // 学习已完成（含文档课读满学时）的课程名
   var progFn = null;                   // 浮窗进度文案函数（详情页赋值）
 
   // 跨整页跳转持久化「已开始/起始时间/已完成课程」。用 localStorage：Via WebView 在带 ?r= 的整页跳转里会清 sessionStorage，导致 started 丢失→反复要点开始的死循环
@@ -83,6 +84,7 @@
     if (_p.started) { state.started = true; state.startWall = _p.startWall || 0; }
     if (_p.done) doneCourses = _p.done;
     if (_p.eval) doneEval = _p.eval;
+    if (_p.study) doneStudy = _p.study;
   } catch (e) {}
   try { state.empId = localStorage.getItem('jppt_emp') || ''; } catch (e) {}
   // 本次运行时长持久化：sessionStart 本次起点；lastActiveAt 上次活跃（断档>3分钟则本次归零）
@@ -96,7 +98,7 @@
   function persist() {
     try {
       localStorage.setItem('jppt_state', JSON.stringify({
-        started: state.started, startWall: state.startWall, done: doneCourses, eval: doneEval,
+        started: state.started, startWall: state.startWall, done: doneCourses, eval: doneEval, study: doneStudy,
         log: evLog.slice(-40)
       }));
     } catch (e) {}
@@ -737,6 +739,7 @@
 
   // 学习完成判定：章节 ✓ 是平台确认（用户明确"显示勾选就是平台确认了"），有章节就以此为准
   function studyDone() {
+    if (doneStudy[state.courseTitle]) return true;   // 文档课读满学时等已标记
     var l = allItems();
     if (l.length) return l.every(function (e) { return isDone(e); });
     // 单视频/无章节列表课程：看平台状态
@@ -1215,18 +1218,33 @@
       }
       // 读得到 studiedTime：等它 >= minStudyTime
       if (studied !== null && needMin) {
-        badge('文档阅读中 ' + studied + '/' + needMin + ' 分钟');
         if (studied >= needMin) {
-          // studiedTime 达标但 finishStatus 未 true：再等一次平台上报，超时则返回
-          if (!state.docHold) state.docHold = Date.now();
-          if (Date.now() - state.docHold > 70000) { badge('文档计时已满，回课程页'); goBack(); }
+          // 学时已满 → 标记该课"学习完成"，回课程页（详情页据此去评估或结业，不会再来回进阅读页）
+          badge('✓ 文档学时已满 ' + studied + '/' + needMin + '，回课程页');
+          if (!doneStudy[state.courseTitle]) {
+            doneStudy[state.courseTitle] = 1;
+            persist();
+            logEvent('文档学时已满 ' + studied + '/' + needMin + ' 分钟');
+          }
+          state.docHold = 0;
+          goBack();
+          return;
         }
+        badge('文档阅读中 ' + studied + '/' + needMin + ' 分钟');
         return;
       }
       // 读不到 Vue：纯墙钟兜底（URL 无 minStudyTime，用默认 15 分钟/页估算）
       var el0 = Date.now() - state.docOpenedAt;
+      if (el0 >= 15 * 60000) {
+        if (!doneStudy[state.courseTitle]) {
+          doneStudy[state.courseTitle] = 1; persist();
+          logEvent('文档墙钟已满 15 分钟');
+        }
+        badge('✓ 文档墙钟已满，回课程页');
+        goBack();
+        return;
+      }
       badge('文档阅读中（墙钟 ' + fmt(el0 / 1000) + '，未能读取平台计时）');
-      if (el0 >= 15 * 60000) { badge('文档墙钟已满，回课程页'); goBack(); }
       return;
     }
 
