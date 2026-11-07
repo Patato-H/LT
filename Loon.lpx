@@ -6,5 +6,6 @@
 [Host]
 *.hk6.org = server:223.5.5.5
 *.ltyun111.com = server:223.5.5.5
+*.fmgcloud.xyz = server:223.5.5.5
 [Rule]
 DOMAIN-KEYWORD,ltyun001,DIRECT
