@@ -1,8 +1,5 @@
 #!name=蓝通云
 #!desc=优化蓝通云入口访问策略，自动分流并提升连接稳定性。
-#!openUrl=https://ltyun001.com
-#!author=Patatooo
-#!icon=https://favicon.im/www.ltyun.xyz?larger=true&t=1782337722290
 
 [Rule]
 # 机场官网 / 面板 / API 直连（含所有子域名）
@@ -10,13 +7,12 @@ DOMAIN-SUFFIX,ltyun001.com,DIRECT
 DOMAIN-SUFFIX,ltyun111.com,DIRECT
 
 [Host]
-# 蓝通云相关域名统一交给阿里 DNS(223.5.5.5) 解析，避免被调度到远端 CDN
+# 蓝通云相关域名统一交给阿里 DNS(223.5.5.5) 解析
 hk6.org = server:223.5.5.5
 *.hk6.org = server:223.5.5.5
 ltyun001.com = server:223.5.5.5
 *.ltyun001.com = server:223.5.5.5
 ltyun111.com = server:223.5.5.5
 *.ltyun111.com = server:223.5.5.5
-# 节点入口域名：任意前缀都用 223.5.5.5
 fmgcloud.xyz = server:223.5.5.5
 *.fmgcloud.xyz = server:223.5.5.5
