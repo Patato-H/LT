@@ -13,6 +13,12 @@ compat_arguments_schema:
     default_value: PROXY
 
 rules:
+- domain_suffix:
+    match: ltyun001.com
+    policy: DIRECT
+- domain_suffix:
+    match: ltyun111.com
+    policy: DIRECT
 - domain_keyword:
     match: ltyun001
     policy: DIRECT
@@ -31,12 +37,31 @@ dns:
         match: hk6.org
         value: bootstrap
         disabled: false
-
     - domain_wildcard:
         match: "*.hk6.org"
         value: bootstrap
         disabled: false
+    - domain:
+        match: ltyun001.com
+        value: bootstrap
+        disabled: false
+    - domain_wildcard:
+        match: "*.ltyun001.com"
+        value: bootstrap
+        disabled: false
+    - domain:
+        match: ltyun111.com
+        value: bootstrap
+        disabled: false
     - domain_wildcard:
         match: "*.ltyun111.com"
+        value: bootstrap
+        disabled: false
+    - domain:
+        match: fmgcloud.xyz
+        value: bootstrap
+        disabled: false
+    - domain_wildcard:
+        match: "*.fmgcloud.xyz"
         value: bootstrap
         disabled: false
